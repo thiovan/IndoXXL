@@ -1,3 +1,4 @@
+<!-- https://www.googleapis.com/drive/v3/files/1EBgyx3VM9zTXeenkdZJf7UKDjqyITe3q?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE -->
 <html lang="en">
 
 <head>
@@ -7,22 +8,24 @@
 
     <link rel="stylesheet" href="assets/css/video-js.css">
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="assets/css/jquery.dataTables.min.css">
     <script type="text/javascript" src="assets/js/jquery-3.4.1.min.js"></script>
     <script type="text/javascript" src="assets/js/videojs-ie8.min.js"></script>
+    <script type="text/javascript" src="assets/js/video.js"></script>
     <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="assets/js/jquery.dataTables.min.js"></script>
 </head>
 
 <body>
     <div class="container">
-        <h3>IndoXXL</h3>
+        <h3 class="mb-0">IndoXXL</h3>
+        <p class="mb-5">Dari Anda, Oleh Anda, Untuk Anda</p>
         <div class="row">
             <div class="col-md-12">
-                <video id="video-player" class="video-js vjs-16-9" controls preload="auto" data-setup="{fill: true}"
-                    crossorigin="anonymous">
-                    <source
-                        src="https://www.googleapis.com/drive/v3/files/1sfyGs5ojpeI96Uc08_ncPKeH6esOi4H6?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE"
-                        type="video/webm" />
-                    <track kind="captions" src="https://www.googleapis.com/drive/v3/files/1EBgyx3VM9zTXeenkdZJf7UKDjqyITe3q?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE" srclang="id" label="Indonesia" default>
+                <video id="video-player" class="video-js vjs-16-9" crossorigin=" anonymous">
+                    <source src="https://www.googleapis.com/drive/v3/files/18gU7C2luQtOVNgqluD1DECIOH91B6LdG?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE" type="video/webm" />
+                    <track kind="captions" src="https://www.googleapis.com/drive/v3/files/1u4eyYhWAEGhUuisQ0fOMJG3dQ3Z6ysbZ?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE" srclang="id" label="Indonesia" default>
                     <p class="vjs-no-js">
                         To view this video please enable JavaScript, and consider upgrading to a
                         web browser that
@@ -32,11 +35,44 @@
             </div>
         </div>
     </div>
-
-    <script type="text/javascript" src="assets/js/video.js"></script>
     <script>
         $(document).ready(function () {
+            initVideoPlayer();
+
         });
+
+        function initVideoPlayer() {
+            this.player = videojs('video-player', {
+                controls: true,
+                autoplay: false,
+                preload: 'auto',
+            });
+
+            var controlBar = this.player.getChild('controlBar');
+            var currentTimeDisplay = controlBar.getChild('CurrentTimeDisplay');
+            var btnForward = controlBar.addChild("button");
+            btnForward.el().innerHTML = '<span class="mdi mdi-fast-forward-10" style="font-size: 16px"></span>';
+            btnForward.el().onclick = function () {
+                seek(10)
+            }
+            var btnRewind = controlBar.addChild("button");
+            btnRewind.el().innerHTML = '<span class="mdi mdi-rewind-10" style="font-size: 16px"></span>';
+            btnRewind.el().onclick = function () {
+                seek(-10)
+            }
+            controlBar.el().insertBefore(btnRewind.el(), currentTimeDisplay.el());
+            controlBar.el().insertBefore(btnForward.el(), currentTimeDisplay.el());
+        }
+
+        function seek(secs) {
+            let time = this.player.currentTime() + secs;
+
+            if (time < 0) {
+                time = 0;
+            }
+
+            this.player.currentTime(time);
+        }
     </script>
 </body>
 
