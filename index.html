@@ -7,12 +7,26 @@
     <title>IndoXXL</title>
 
     <link rel="stylesheet" href="assets/css/video-js.css">
+    <link rel="stylesheet" href="assets/css/videojs-seek-buttons.css">
+    <link rel="stylesheet" href="assets/css/videojs-vjsdownload.css">
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="assets/css/jquery.dataTables.min.css">
+    <style>
+        .video-js .vjs-time-control {
+            display: block;
+        }
+
+        .video-js .vjs-remaining-time {
+            display: none;
+        }
+    </style>
     <script type="text/javascript" src="assets/js/jquery-3.4.1.min.js"></script>
     <script type="text/javascript" src="assets/js/videojs-ie8.min.js"></script>
     <script type="text/javascript" src="assets/js/video.js"></script>
+    <script type="text/javascript" src="assets/js/videojs-seek-buttons.min.js"></script>
+    <script type="text/javascript" src="assets/js/videojs-vjsdownload.min.js"></script>
+    <script type="text/javascript" src="assets/js/videojs-shuttle-controls.min.js"></script>
     <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="assets/js/jquery.dataTables.min.js"></script>
 </head>
@@ -24,8 +38,8 @@
         <div class="row">
             <div class="col-md-12">
                 <video id="video-player" class="video-js vjs-16-9" crossorigin=" anonymous">
-                    <source src="https://www.googleapis.com/drive/v3/files/18gU7C2luQtOVNgqluD1DECIOH91B6LdG?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE" type="video/webm" />
-                    <track kind="captions" src="https://www.googleapis.com/drive/v3/files/1u4eyYhWAEGhUuisQ0fOMJG3dQ3Z6ysbZ?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE" srclang="id" label="Indonesia" default>
+                    <source src="test.mp4" type="video/webm" />
+                    <track kind="captions" src="test.vtt" srclang="id" label="Indonesia" default>
                     <p class="vjs-no-js">
                         To view this video please enable JavaScript, and consider upgrading to a
                         web browser that
@@ -38,7 +52,6 @@
     <script>
         $(document).ready(function () {
             initVideoPlayer();
-
         });
 
         function initVideoPlayer() {
@@ -46,32 +59,31 @@
                 controls: true,
                 autoplay: false,
                 preload: 'auto',
+                plugins: {
+                    vjsdownload: {
+                        beforeElement: 'playbackRateMenuButton',
+                        textControl: 'Download video',
+                        name: 'downloadButton',
+                    }
+                }
             });
 
-            var controlBar = this.player.getChild('controlBar');
-            var currentTimeDisplay = controlBar.getChild('CurrentTimeDisplay');
-            var btnForward = controlBar.addChild("button");
-            btnForward.el().innerHTML = '<span class="mdi mdi-fast-forward-10" style="font-size: 16px"></span>';
-            btnForward.el().onclick = function () {
-                seek(10)
-            }
-            var btnRewind = controlBar.addChild("button");
-            btnRewind.el().innerHTML = '<span class="mdi mdi-rewind-10" style="font-size: 16px"></span>';
-            btnRewind.el().onclick = function () {
-                seek(-10)
-            }
-            controlBar.el().insertBefore(btnRewind.el(), currentTimeDisplay.el());
-            controlBar.el().insertBefore(btnForward.el(), currentTimeDisplay.el());
-        }
+            console.log(this.player.getChild('controlBar'));
 
-        function seek(secs) {
-            let time = this.player.currentTime() + secs;
+            this.player.seekButtons({
+                forward: 10,
+                back: 10
+            });
 
-            if (time < 0) {
-                time = 0;
-            }
-
-            this.player.currentTime(time);
+            this.player.shuttleControls({
+                playPauseKeys: [' ', 'k'],
+                backwardKeys: ['j'],
+                forwardKey: ['l'],
+                backwardFrameKey: ['ArrowLeft'],
+                forwardFrameKey: ['ArrowRight'],
+                shiftMagnification: 10,
+                fps: 30
+            });
         }
     </script>
 </body>
