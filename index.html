@@ -1,4 +1,3 @@
-<!-- https://www.googleapis.com/drive/v3/files/1EBgyx3VM9zTXeenkdZJf7UKDjqyITe3q?alt=media&key=AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE -->
 <html lang="en">
 
 <head>
@@ -33,29 +32,47 @@
 
 <body>
     <div class="container">
-        <h3 class="mb-0">IndoXXL</h3>
-        <p class="mb-5">Dari Anda, Oleh Anda, Untuk Anda</p>
+        <!-- <h3 class="mb-0">IndoXXL</h3> -->
+        <!-- <p class="mb-5">Dari Anda, Oleh Anda, Untuk Anda</p> -->
         <div class="row">
             <div class="col-md-12">
-                <video id="video-player" class="video-js vjs-16-9" crossorigin=" anonymous">
+                <video id="video-player" class="video-js vjs-16-9 vjs-big-play-centered" crossorigin=" anonymous">
                     <source src="test.mp4" type="video/webm" />
-                    <track kind="captions" src="test.vtt" srclang="id" label="Indonesia" default>
                     <p class="vjs-no-js">
                         To view this video please enable JavaScript, and consider upgrading to a
                         web browser that
                         <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
                     </p>
                 </video>
+
+                <div class="form-group mt-3">
+                    <label>Video URL</label>
+                    <input id="videoUrl" class="form-control">
+                    <small class="form-text text-muted">Currently only support Google Drive url (please set sharing access to public)</small>
+                    <small class="form-text text-muted">Example: https://drive.google.com/file/d/QwErTY12345AsdFG/view?usp=sharing</small>
+                </div>
+                <div class="form-group">
+                    <label>Subtitle URL</label>
+                    <input id="subtitleUrl" class="form-control">
+                    <small class="form-text text-muted">Currently only support Google Drive url (please set sharing access to public)</small>
+                </div>
+                <div class="text-center pt-3 mb-5">
+                    <button id="btnPlay" type="button" class="btn btn-lg btn-primary btn-block">Play Now</button>
+                </div>
             </div>
         </div>
     </div>
+
     <script>
+        const apiKey = "AIzaSyA5jOSjiaGPU3yVkxoUKDW6NBFyiCtMWmE";
+        let player;
+
         $(document).ready(function () {
             initVideoPlayer();
         });
 
         function initVideoPlayer() {
-            this.player = videojs('video-player', {
+            player = videojs('video-player', {
                 controls: true,
                 autoplay: false,
                 preload: 'auto',
@@ -68,14 +85,12 @@
                 }
             });
 
-            console.log(this.player.getChild('controlBar'));
-
-            this.player.seekButtons({
+            player.seekButtons({
                 forward: 10,
                 back: 10
             });
 
-            this.player.shuttleControls({
+            player.shuttleControls({
                 playPauseKeys: [' ', 'k'],
                 backwardKeys: ['j'],
                 forwardKey: ['l'],
@@ -85,6 +100,108 @@
                 fps: 30
             });
         }
+
+        function getDirectLink(url) {
+            const fileId = url.substring(
+                url.lastIndexOf("d/") + 2,
+                url.lastIndexOf("/view")
+            );
+
+            return `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`
+        }
+
+        function srt2webvtt(data) {
+            var srt = data.replace(/\r+/g, '');
+            srt = srt.replace(/^\s+|\s+$/g, '');
+
+            var cuelist = srt.split('\n\n');
+            var result = "";
+
+            if (cuelist.length > 0) {
+                result += "WEBVTT\n\n";
+                for (var i = 0; i < cuelist.length; i = i + 1) {
+                    result += convertSrtCue(cuelist[i]);
+                }
+            }
+
+            return result;
+        }
+
+        function convertSrtCue(caption) {
+            var cue = "";
+            var s = caption.split(/\n/);
+
+            while (s.length > 3) {
+                for (var i = 3; i < s.length; i++) {
+                    s[2] += "\n" + s[i]
+                }
+                s.splice(3, s.length - 3);
+            }
+
+            var line = 0;
+
+            if (!s[0].match(/\d+:\d+:\d+/) && s[1].match(/\d+:\d+:\d+/)) {
+                cue += s[0].match(/\w+/) + "\n";
+                line += 1;
+            }
+
+            if (s[line].match(/\d+:\d+:\d+/)) {
+                var m = s[1].match(/(\d+):(\d+):(\d+)(?:,(\d+))?\s*--?>\s*(\d+):(\d+):(\d+)(?:,(\d+))?/);
+                if (m) {
+                    cue += m[1] + ":" + m[2] + ":" + m[3] + "." + m[4] + " --> "
+                        + m[5] + ":" + m[6] + ":" + m[7] + "." + m[8] + "\n";
+                    line += 1;
+                } else {
+                    return "";
+                }
+            } else {
+                return "";
+            }
+
+            if (s[line]) {
+                cue += s[line] + "\n\n";
+            }
+
+            return cue;
+        }
+
+        $("#btnPlay").click(function () {
+            const videoUrl = $("#videoUrl").val();
+            const subtitleUrl = $("#subtitleUrl").val();
+
+            var client = new XMLHttpRequest();
+            client.open('GET', getDirectLink(subtitleUrl));
+            client.onreadystatechange = function () {
+                const srtText = client.responseText;
+                const vttText = srt2webvtt(srtText);
+                const vttBlob = new Blob([vttText], { type: 'text/vtt' });
+                const blobURL = URL.createObjectURL(vttBlob);
+
+                var oldTracks = player.remoteTextTracks();
+                for (let i = 0; i < oldTracks.length; i++) {
+                    const element = oldTracks[i];
+                    player.removeRemoteTextTrack(element);
+                }
+
+                player.addRemoteTextTrack({
+                    src: blobURL,
+                    kind: 'subtitles',
+                    label: 'subtitle',
+                    default: true,
+                    mode: 'showing'
+                }, true);
+
+                player.src({
+                    type: 'video/mp4',
+                    src: getDirectLink(videoUrl)
+                });
+
+                player.play();
+            }
+            client.send();
+
+        });
+
     </script>
 </body>
 
